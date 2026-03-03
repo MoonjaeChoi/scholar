@@ -1,0 +1,282 @@
+# Generated: 2025-10-14 11:15:00 KST
+"""
+Claude API Client for Sonic Koi Methodology
+
+이 모듈은 Anthropic Claude API를 호출하여 5단계 프로세스를 실행합니다.
+"""
+
+import json
+import re
+from pathlib import Path
+from typing import Dict, Optional, Any
+from loguru import logger
+
+try:
+    import anthropic
+    from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+    ANTHROPIC_AVAILABLE = True
+except ImportError:
+    ANTHROPIC_AVAILABLE = False
+    logger.warning("anthropic or tenacity not installed. API calls will fail.")
+    # Define no-op decorator if tenacity is not available
+    def retry(*args, **kwargs):
+        def decorator(func):
+            return func
+        return decorator
+    stop_after_attempt = wait_exponential = retry_if_exception_type = lambda *args, **kwargs: None
+
+
+class ClaudeAPIError(Exception):
+    """Claude API 호출 에러"""
+    pass
+
+
+class ClaudeAPIClient:
+    """Claude API 호출 클라이언트"""
+
+    def __init__(
+        self,
+        api_key: str = None,
+        model: str = None,
+        max_tokens: int = None
+    ):
+        """
+        Claude API 클라이언트 초기화
+
+        Args:
+            api_key: Anthropic API Key (없으면 환경 변수에서 로드)
+            model: 사용할 모델 (기본: claude-3-5-sonnet-20241022)
+            max_tokens: 최대 출력 토큰 (기본: 16000)
+        """
+        if not ANTHROPIC_AVAILABLE:
+            raise ImportError(
+                "anthropic package not installed. "
+                "Please run: pip install anthropic tenacity"
+            )
+
+        # 환경 변수에서 설정 로드
+        import os
+        from dotenv import load_dotenv
+
+        # .env 파일 로드
+        load_dotenv()
+
+        self.api_key = api_key or os.getenv('ANTHROPIC_API_KEY')
+        if not self.api_key:
+            raise ValueError(
+                "ANTHROPIC_API_KEY not found. "
+                "Set it in .env file or pass as argument."
+            )
+
+        self.model = model or os.getenv('ANTHROPIC_MODEL', 'claude-3-5-sonnet-20241022')
+        self.max_tokens = max_tokens or int(os.getenv('ANTHROPIC_MAX_TOKENS', 16000))
+
+        # Anthropic 클라이언트 초기화
+        self.client = anthropic.Anthropic(api_key=self.api_key)
+
+        logger.info(f"Claude API Client initialized (model: {self.model})")
+
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=4, max=10),
+        retry=retry_if_exception_type((
+            anthropic.APIConnectionError,
+            anthropic.RateLimitError,
+            anthropic.InternalServerError
+        ))
+    )
+    def call_api(
+        self,
+        prompt: str,
+        temperature: float = 0.0,
+        system_prompt: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Claude API 호출 (재시도 로직 포함)
+
+        Args:
+            prompt: 사용자 프롬프트
+            temperature: 창의성 조절 (0.0 = 결정론적, 1.0 = 창의적)
+            system_prompt: 시스템 프롬프트 (선택사항)
+
+        Returns:
+            {
+                "text": "응답 텍스트",
+                "usage": {
+                    "input_tokens": 123,
+                    "output_tokens": 456,
+                    "total_tokens": 579
+                },
+                "model": "claude-3-5-sonnet-20241022",
+                "stop_reason": "end_turn"
+            }
+
+        Raises:
+            ClaudeAPIError: API 호출 실패
+        """
+        logger.info(f"Calling Claude API (model: {self.model})")
+
+        try:
+            # 메시지 구성
+            messages = [{"role": "user", "content": prompt}]
+
+            # API 호출 파라미터
+            kwargs = {
+                "model": self.model,
+                "max_tokens": self.max_tokens,
+                "messages": messages,
+                "temperature": temperature
+            }
+
+            # System prompt가 있으면 추가
+            if system_prompt:
+                kwargs["system"] = system_prompt
+
+            # API 호출
+            response = self.client.messages.create(**kwargs)
+
+            # 응답 추출
+            text_response = response.content[0].text
+            usage = {
+                "input_tokens": response.usage.input_tokens,
+                "output_tokens": response.usage.output_tokens,
+                "total_tokens": response.usage.input_tokens + response.usage.output_tokens
+            }
+
+            logger.info(
+                f"API call successful (tokens: {usage['input_tokens']} in, "
+                f"{usage['output_tokens']} out)"
+            )
+
+            return {
+                "text": text_response,
+                "usage": usage,
+                "model": response.model,
+                "stop_reason": response.stop_reason
+            }
+
+        except anthropic.AuthenticationError as e:
+            logger.error(f"Authentication failed: {e}")
+            raise ClaudeAPIError("Invalid API key. Please check ANTHROPIC_API_KEY.")
+
+        except anthropic.RateLimitError as e:
+            logger.warning(f"Rate limit hit: {e}")
+            logger.info("Waiting before retry...")
+            raise  # tenacity가 재시도
+
+        except anthropic.APIConnectionError as e:
+            logger.warning(f"Connection error: {e}")
+            raise  # tenacity가 재시도
+
+        except anthropic.APIStatusError as e:
+            logger.error(f"API status error: {e.status_code} - {e.message}")
+            if e.status_code >= 500:
+                raise  # 서버 에러는 재시도
+            else:
+                raise ClaudeAPIError(f"API error: {e.message}")
+
+        except Exception as e:
+            logger.error(f"Unexpected error calling Claude API: {e}")
+            raise ClaudeAPIError(f"Unexpected error: {e}")
+
+    def load_prompt_template(self, prompt_file: Path) -> str:
+        """
+        프롬프트 템플릿 파일 로드
+
+        Args:
+            prompt_file: 프롬프트 Markdown 파일 경로
+
+        Returns:
+            프롬프트 텍스트
+
+        Raises:
+            FileNotFoundError: 파일을 찾을 수 없음
+        """
+        if not prompt_file.exists():
+            raise FileNotFoundError(f"Prompt file not found: {prompt_file}")
+
+        with open(prompt_file, 'r', encoding='utf-8') as f:
+            content = f.read()
+
+        logger.info(f"Loaded prompt template: {prompt_file.name} ({len(content)} chars)")
+        return content
+
+    def extract_json_from_response(self, text: str) -> Dict[str, Any]:
+        """
+        응답에서 JSON 추출
+
+        Claude는 종종 다음과 같은 형식으로 응답:
+        ```json
+        {
+          "key": "value"
+        }
+        ```
+
+        Args:
+            text: Claude API 응답 텍스트
+
+        Returns:
+            파싱된 JSON 딕셔너리
+
+        Raises:
+            ValueError: JSON 파싱 실패
+        """
+        # 패턴 목록 (우선순위 순서)
+        patterns = [
+            r'```json\s*\n(.*?)\n```',  # ```json ... ```
+            r'```\s*\n(.*?)\n```',       # ``` ... ```
+            r'\{.*\}'                     # {...}
+        ]
+
+        for pattern in patterns:
+            match = re.search(pattern, text, re.DOTALL)
+            if match:
+                # 패턴에 괄호가 있으면 group(1), 없으면 group(0)
+                json_str = match.group(1) if '(' in pattern else match.group(0)
+                try:
+                    parsed = json.loads(json_str)
+                    logger.info(f"Successfully parsed JSON ({len(json_str)} chars)")
+                    return parsed
+                except json.JSONDecodeError:
+                    continue
+
+        # 모든 패턴 실패 시 전체 텍스트 시도
+        try:
+            parsed = json.loads(text.strip())
+            logger.info("Successfully parsed JSON from full text")
+            return parsed
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse JSON: {e}")
+            logger.error(f"Response preview:\n{text[:500]}...")
+            raise ValueError(
+                f"Failed to extract JSON from response: {e}\n\n"
+                f"Response preview:\n{text[:500]}..."
+            )
+
+    @staticmethod
+    def truncate_content(content: str, max_chars: int = 50000) -> str:
+        """
+        토큰 제한을 위해 컨텐츠 자르기
+
+        Claude 3.5 Sonnet:
+        - Max input: ~200K tokens
+        - 대략 1 token = 4 characters (영어 기준)
+        - 50KB = ~12,500 tokens (안전 마진)
+
+        Args:
+            content: 원본 컨텐츠
+            max_chars: 최대 문자 수
+
+        Returns:
+            잘린 컨텐츠
+        """
+        if len(content) > max_chars:
+            logger.warning(f"Content truncated from {len(content)} to {max_chars} chars")
+            return content[:max_chars] + "\n\n... (truncated for token limit)"
+        return content
+
+
+# 편의 함수
+def create_client(**kwargs) -> ClaudeAPIClient:
+    """Claude API 클라이언트 생성 (편의 함수)"""
+    return ClaudeAPIClient(**kwargs)

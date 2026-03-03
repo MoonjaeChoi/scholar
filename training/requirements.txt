@@ -1,0 +1,24 @@
+# PaddlePaddle GPU 버전 (CUDA 11.8+)
+# paddlepaddle-gpu==2.5.2.post117 is installed in Dockerfile
+# Do NOT install CPU version as it conflicts with GPU version
+paddleocr>=2.7.0
+visualdl
+
+# 이미지 처리
+opencv-python-headless==4.8.1.78
+Pillow>=10.0.0
+imgaug==0.4.0
+pyclipper
+
+# 데이터 처리
+numpy<2.0.0,>=1.21.0
+scipy
+lmdb
+
+# 기타 유틸리티
+loguru>=0.7.0
+tqdm
+matplotlib
+
+# 오라클 데이터베이스 연동 (기존 크롤링 시스템과 공유)
+cx-Oracle==8.3.0

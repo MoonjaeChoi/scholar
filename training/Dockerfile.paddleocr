@@ -1,0 +1,117 @@
+# Generated: 2025-10-01 09:00:00 KST
+# PaddleOCR Training Environment with GPU Support
+FROM nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu22.04
+
+LABEL maintainer="ML Pipeline Team"
+LABEL description="PaddleOCR Training Environment for OCR Model Fine-tuning"
+
+# 환경 변수 설정
+ENV LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8 \
+    PYTHONUNBUFFERED=1 \
+    DEBIAN_FRONTEND=noninteractive \
+    PADDLE_INSTALL_DIR=/opt/paddle \
+    WORK_DIR=/home/pro301/git/en-zine/ocr_system/paddleocr_training
+
+# 시스템 패키지 업데이트 및 필수 도구 설치
+RUN apt-get update && \
+    apt-get install -y \
+        software-properties-common \
+        && add-apt-repository -y ppa:deadsnakes/ppa && \
+    apt-get update && \
+    apt-get install -y \
+        python3.9 \
+        python3.9-dev \
+        python3.9-distutils \
+        python3-pip \
+        build-essential \
+        cmake \
+        git \
+        wget \
+        curl \
+        libopenblas-dev \
+        liblapack-dev \
+        libaio1 \
+        libgl1-mesa-glx \
+        libglib2.0-0 \
+        && apt-get clean && \
+        rm -rf /var/lib/apt/lists/*
+
+# Python pip 설치 및 업그레이드
+RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3.9 && \
+    python3.9 -m pip install --upgrade pip setuptools wheel
+
+# 작업 디렉토리 생성
+WORKDIR ${WORK_DIR}
+
+# Oracle Instant Client 설치 (cx-Oracle용)
+RUN wget https://download.oracle.com/otn_software/linux/instantclient/2115000/instantclient-basic-linux.x64-21.15.0.0.0dbru.zip && \
+    apt-get update && apt-get install -y unzip && \
+    unzip instantclient-basic-linux.x64-21.15.0.0.0dbru.zip -d /opt/oracle && \
+    rm -f instantclient-basic-linux.x64-21.15.0.0.0dbru.zip && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Oracle 환경 변수 (Ubuntu 경로)
+ENV LD_LIBRARY_PATH=/opt/oracle/instantclient_21_15:${LD_LIBRARY_PATH} \
+    ORACLE_HOME=/opt/oracle/instantclient_21_15
+
+# PaddlePaddle GPU 설치 (CUDA 11.7 compatible with CUDA 11.8)
+RUN python3.9 -m pip install paddlepaddle-gpu==2.5.2.post117 -f https://www.paddlepaddle.org.cn/whl/linux/mkl/avx/stable.html
+
+# NumPy 1.x 먼저 설치 (imgaug 호환성)
+RUN python3.9 -m pip install "numpy<2.0.0,>=1.21.0"
+
+# requirements.txt 복사 및 설치
+COPY requirements.txt ${WORK_DIR}/
+RUN python3.9 -m pip install --ignore-installed --no-deps -r requirements.txt
+
+# PaddleOCR 소스코드 클론
+RUN git clone https://github.com/PaddlePaddle/PaddleOCR.git ${WORK_DIR}/PaddleOCR && \
+    cd ${WORK_DIR}/PaddleOCR && \
+    python3.9 -m pip install --no-deps -r requirements.txt
+
+# 의존성 설치 (numpy는 이미 설치됨, paddleocr는 제외 - 소스에서 사용)
+# scipy는 1.12.0으로 고정 (imgaug 호환성 - 1.13.1에서 TypeError 발생)
+# opencv-python-headless는 4.8.1.78로 고정 (4.12.0에서 cv2.imdecode 호환성 문제)
+RUN python3.9 -m pip install --ignore-installed scipy==1.12.0 opencv-python-headless==4.8.1.78 lmdb tqdm matplotlib loguru Pillow pyclipper imgaug visualdl cx-Oracle shapely scikit-image
+
+# NumPy, scipy, opencv 버전 강제 고정 (다른 패키지들이 업그레이드했을 경우 대비)
+RUN python3.9 -m pip install --force-reinstall "numpy<2.0.0,>=1.21.0" scipy==1.12.0 opencv-python-headless==4.8.1.78
+
+# 스크립트 및 설정 파일 복사
+COPY scripts/ ${WORK_DIR}/scripts/
+COPY configs/ ${WORK_DIR}/configs/
+COPY database_connection.py ${WORK_DIR}/
+COPY download_pretrained_models.sh ${WORK_DIR}/
+COPY setup_environment.sh ${WORK_DIR}/
+
+# 실행 권한 부여
+RUN chmod +x ${WORK_DIR}/*.sh
+
+# 데이터 및 모델 디렉토리 생성
+RUN mkdir -p ${WORK_DIR}/data/train/images && \
+    mkdir -p ${WORK_DIR}/data/val/images && \
+    mkdir -p ${WORK_DIR}/models/detection && \
+    mkdir -p ${WORK_DIR}/models/recognition && \
+    mkdir -p ${WORK_DIR}/output
+
+# cuDNN 심볼릭 링크 생성 (PaddlePaddle이 /usr/local/cuda/lib64에서 찾도록 설정)
+RUN mkdir -p /usr/local/cuda/lib64 && \
+    ln -sf /usr/lib/x86_64-linux-gnu/libcudnn.so.8.9.6 /usr/local/cuda/lib64/libcudnn.so.8.9.6 && \
+    ln -sf /usr/lib/x86_64-linux-gnu/libcudnn.so.8 /usr/local/cuda/lib64/libcudnn.so.8 && \
+    ln -sf /usr/lib/x86_64-linux-gnu/libcudnn.so /usr/local/cuda/lib64/libcudnn.so && \
+    ln -sf /usr/lib/x86_64-linux-gnu/libcudnn_ops_infer.so.8 /usr/local/cuda/lib64/libcudnn_ops_infer.so.8 && \
+    ln -sf /usr/lib/x86_64-linux-gnu/libcudnn_cnn_infer.so.8 /usr/local/cuda/lib64/libcudnn_cnn_infer.so.8 && \
+    ln -sf /usr/lib/x86_64-linux-gnu/libcudnn_adv_infer.so.8 /usr/local/cuda/lib64/libcudnn_adv_infer.so.8 && \
+    ldconfig
+
+# Python 경로 및 라이브러리 경로 설정
+ENV PYTHONPATH=${WORK_DIR}/PaddleOCR:${PYTHONPATH} \
+    LD_LIBRARY_PATH=/usr/local/cuda/lib64:/usr/lib/x86_64-linux-gnu:/opt/oracle/instantclient_21_15:${LD_LIBRARY_PATH}
+
+# 헬스체크
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python3.9 -c "import paddle; print('PaddlePaddle OK')" || exit 1
+
+# 기본 명령어
+CMD ["/bin/bash"]

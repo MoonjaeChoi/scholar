@@ -1,0 +1,73 @@
+{
+  "description": "Dynamic Revisit Policy Configuration",
+  "version": "1.0",
+  "updated": "2025-10-14",
+  "default_interval_hours": 168,
+
+  "url_type_intervals": {
+    "news": {
+      "hours": 3,
+      "description": "뉴스 사이트는 자주 업데이트"
+    },
+    "blog_main": {
+      "hours": 12,
+      "description": "블로그 메인은 하루 2회"
+    },
+    "community": {
+      "hours": 6,
+      "description": "커뮤니티는 6시간마다"
+    },
+    "article": {
+      "hours": 168,
+      "description": "개별 게시글은 주 1회"
+    },
+    "static": {
+      "hours": 720,
+      "description": "정적 페이지는 월 1회"
+    },
+    "unknown": {
+      "hours": 168,
+      "description": "알 수 없는 유형은 주 1회"
+    }
+  },
+
+  "url_patterns": {
+    "news": [
+      "news.naver.com",
+      "news.daum.net",
+      "news.nate.com",
+      "chosun.com",
+      "joongang.co.kr",
+      "donga.com",
+      "hani.co.kr",
+      "khan.co.kr",
+      "mk.co.kr",
+      "yna.co.kr",
+      "ytn.co.kr",
+      "sbs.co.kr"
+    ],
+    "blog_main": [
+      "blog.naver.com/$",
+      "*.tistory.com/$",
+      "brunch.co.kr/@*"
+    ],
+    "community": [
+      "clien.net",
+      "ruliweb.com",
+      "ppomppu.co.kr",
+      "slrclub.com",
+      "dcinside.com",
+      "fmkorea.com",
+      "bobaedream.co.kr",
+      "82cook.com",
+      "mlbpark.donga.com"
+    ]
+  },
+
+  "content_duplicate_check": {
+    "enabled": true,
+    "image_hash_algorithm": "SHA256",
+    "check_period_days": 30,
+    "description": "이미지 해시 기반 컨텐츠 중복 체크"
+  }
+}

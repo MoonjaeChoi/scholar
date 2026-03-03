@@ -1,0 +1,35 @@
+{
+  "total": 3,
+  "successful": 3,
+  "failed": 0,
+  "results": [
+    {
+      "success": true,
+      "url": "https://notice.tistory.com",
+      "file_path": "/Users/memmem/git/en-zine/scholar/data/phase1_samples/notice_tistory_20251014_082913.html",
+      "size": 44618,
+      "timestamp": "20251014_082913",
+      "error": null,
+      "description": "공식 블로그, 표준 테마"
+    },
+    {
+      "success": true,
+      "url": "https://coding-factory.tistory.com",
+      "file_path": "/Users/memmem/git/en-zine/scholar/data/phase1_samples/coding_factory_20251014_082917.html",
+      "size": 105236,
+      "timestamp": "20251014_082917",
+      "error": null,
+      "description": "개발 블로그, 커스텀 테마"
+    },
+    {
+      "success": true,
+      "url": "https://inpa.tistory.com",
+      "file_path": "/Users/memmem/git/en-zine/scholar/data/phase1_samples/inpa_tistory_20251014_082920.html",
+      "size": 397578,
+      "timestamp": "20251014_082920",
+      "error": null,
+      "description": "인기 블로그, 복잡한 레이아웃"
+    }
+  ],
+  "collected_at": "2025-10-14T08:29:20.706218"
+}

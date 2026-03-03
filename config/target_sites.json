@@ -1,0 +1,29 @@
+{
+  "news_sites": [
+  {
+    "name": "yonhap_news",
+    "base_url": "https://www.yna.co.kr",
+    "crawl_patterns": ["/view/*", "/local/*", "/international/*", "/economy/*"],
+    "max_pages": 100,
+    "priority": "high"
+  }
+],
+  "blog_sites": [
+  {
+    "name": "hancom_tech_blog",
+    "base_url": "https://tech.hancom.com/blog",
+    "crawl_patterns": ["/blog/*", "/post/*", "/category/*"],
+    "max_pages": 100,
+    "priority": "high"
+  }
+],
+  "document_sites": [
+    {
+    "name": "velog",
+    "base_url": "https://velog.io",
+    "crawl_patterns": ["/@*/", "/@*/posts/*"],
+    "max_pages": 100,
+    "priority": "high"
+  }
+  ]
+}

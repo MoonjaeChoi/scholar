@@ -1,0 +1,388 @@
+{
+  "description": "Korean Blog Sites Configuration - OCR Training Data Collection",
+  "generated": "2025-10-02 20:00:00 KST",
+
+  "naver_blog": {
+    "description": "네이버 블로그 - 한국 최대 블로그 플랫폼",
+    "enabled": true,
+    "base_urls": [
+      "https://blog.naver.com",
+      "https://m.blog.naver.com"
+    ],
+    "max_posts_per_blog": 20,
+    "crawl_frequency": "daily"
+  },
+
+  "naver_post": {
+    "description": "네이버 포스트 - 네이버 공식 콘텐츠",
+    "enabled": true,
+    "base_urls": [
+      "https://post.naver.com"
+    ],
+    "max_posts_per_blog": 15,
+    "crawl_frequency": "daily"
+  },
+
+  "naver_news": {
+    "description": "네이버 뉴스 - 뉴스 기사",
+    "enabled": true,
+    "base_urls": [
+      "https://news.naver.com"
+    ],
+    "max_posts_per_blog": 15,
+    "crawl_frequency": "daily"
+  },
+
+  "daum_news": {
+    "description": "다음 뉴스 - 뉴스 기사",
+    "enabled": true,
+    "base_urls": [
+      "https://news.daum.net"
+    ],
+    "max_posts_per_blog": 15,
+    "crawl_frequency": "daily"
+  },
+
+  "nate_news": {
+    "description": "네이트 뉴스 - 뉴스 기사",
+    "enabled": true,
+    "base_urls": [
+      "https://news.nate.com"
+    ],
+    "max_posts_per_blog": 15,
+    "crawl_frequency": "daily"
+  },
+
+  "tistory": {
+    "description": "티스토리 - 개발자/기술 블로그 중심",
+    "enabled": true,
+    "base_urls": [
+      "https://www.tistory.com",
+      "https://notice.tistory.com",
+      "https://coding-factory.tistory.com",
+      "https://blueyikim.tistory.com",
+      "https://inpa.tistory.com"
+    ],
+    "max_posts_per_blog": 15,
+    "crawl_frequency": "daily"
+  },
+
+  "brunch": {
+    "description": "브런치 - 고품질 장문 콘텐츠",
+    "enabled": false,
+    "base_urls": [
+      "https://brunch.co.kr"
+    ],
+    "max_posts_per_author": 10,
+    "crawl_frequency": "daily",
+    "note": "신규 크롤링 비활성화, 기존 수집 데이터(986개)는 학습에 포함"
+  },
+
+  "velog": {
+    "description": "벨로그 - 개발자 전용 블로그",
+    "enabled": false,
+    "base_urls": [
+      "https://velog.io"
+    ],
+    "max_posts_per_tag": 10,
+    "crawl_frequency": "daily",
+    "note": "신규 크롤링 비활성화, 기존 수집 데이터(975개)는 학습에 포함"
+  },
+
+  "medium_korean": {
+    "description": "미디엄 한국어 - 전문가 칼럼",
+    "enabled": false,
+    "base_urls": [
+      "https://medium.com/korean"
+    ],
+    "max_posts_per_tag": 10,
+    "crawl_frequency": "daily"
+  },
+
+  "namuwiki": {
+    "description": "나무위키 - 한글 위키백과 (다양한 주제의 고품질 한글 텍스트)",
+    "enabled": true,
+    "base_urls": [
+      "https://namu.wiki/w/%ED%95%9C%EA%B5%AD",
+      "https://namu.wiki/w/%EB%8C%80%ED%95%9C%EB%AF%BC%EA%B5%AD",
+      "https://namu.wiki/w/%EC%84%9C%EC%9A%B8%ED%8A%B9%EB%B3%84%EC%8B%9C",
+      "https://namu.wiki/w/%EA%B8%B0%EC%88%A0",
+      "https://namu.wiki/w/%EA%B3%BC%ED%95%99",
+      "https://namu.wiki/w/%EC%97%AD%EC%82%AC",
+      "https://namu.wiki/w/%EB%AC%B8%ED%99%94",
+      "https://namu.wiki/w/%EC%98%88%EC%88%A0",
+      "https://namu.wiki/w/%EC%8A%A4%ED%8F%AC%EC%B8%A0",
+      "https://namu.wiki/w/%EA%B2%BD%EC%A0%9C"
+    ],
+    "search_keywords": [
+      "한국",
+      "대한민국",
+      "서울",
+      "기술",
+      "과학",
+      "역사",
+      "문화",
+      "예술",
+      "스포츠",
+      "경제",
+      "정치",
+      "사회",
+      "교육",
+      "의학",
+      "공학",
+      "컴퓨터",
+      "프로그래밍",
+      "인공지능",
+      "데이터",
+      "환경"
+    ],
+    "max_pages_per_keyword": 20,
+    "crawl_frequency": "daily",
+    "note": "나무위키는 다양한 주제의 체계적인 한글 문서 제공 - OCR 학습에 유용"
+  },
+
+  "naver_cafe": {
+    "description": "네이버 카페 - 다양한 주제의 커뮤니티 게시글",
+    "enabled": true,
+    "base_urls": [
+      "https://cafe.naver.com/joonggonara",
+      "https://cafe.naver.com/costcokorea",
+      "https://cafe.naver.com/nexonpc",
+      "https://cafe.naver.com/steamindiegame"
+    ],
+    "max_posts_per_cafe": 10,
+    "crawl_frequency": "daily",
+    "note": "다양한 커뮤니티 게시글 - 실생활 한글 표현 수집"
+  },
+
+  "naver_kin": {
+    "description": "네이버 지식iN - 질문과 답변 형식의 한글 텍스트",
+    "enabled": true,
+    "base_urls": [
+      "https://kin.naver.com/qna/list.naver?dirId=1",
+      "https://kin.naver.com/qna/list.naver?dirId=3",
+      "https://kin.naver.com/qna/list.naver?dirId=6"
+    ],
+    "max_posts_per_category": 15,
+    "crawl_frequency": "daily",
+    "note": "Q&A 형식의 실용적인 한글 텍스트"
+  },
+
+  "daum_cafe": {
+    "description": "다음 카페 - 커뮤니티 게시글",
+    "enabled": true,
+    "base_urls": [
+      "https://cafe.daum.net/_c21_/home?grpid=1bld"
+    ],
+    "max_posts_per_cafe": 10,
+    "crawl_frequency": "daily",
+    "note": "다음 카페의 다양한 한글 콘텐츠"
+  },
+
+  "mlbpark": {
+    "description": "MLB파크 - 스포츠 커뮤니티",
+    "enabled": true,
+    "base_urls": [
+      "https://mlbpark.donga.com/mp/b.php?p=1&m=search&b=bullpen&query=",
+      "https://mlbpark.donga.com/mp/b.php?p=1&m=search&b=kbotown&query="
+    ],
+    "max_posts": 20,
+    "crawl_frequency": "daily",
+    "note": "스포츠 관련 한글 토론 및 뉴스"
+  },
+
+  "clien": {
+    "description": "클리앙 - IT/PC 커뮤니티",
+    "enabled": true,
+    "base_urls": [
+      "https://www.clien.net/service/board/park",
+      "https://www.clien.net/service/board/cm_app",
+      "https://www.clien.net/service/board/lecture"
+    ],
+    "max_posts_per_board": 15,
+    "crawl_frequency": "daily",
+    "note": "IT 및 기술 관련 한글 콘텐츠"
+  },
+
+  "dc_inside": {
+    "description": "디시인사이드 - 대형 커뮤니티",
+    "enabled": true,
+    "base_urls": [
+      "https://gall.dcinside.com/board/lists/?id=programming",
+      "https://gall.dcinside.com/board/lists/?id=game_dev"
+    ],
+    "max_posts_per_gallery": 15,
+    "crawl_frequency": "daily",
+    "note": "다양한 주제의 커뮤니티 게시글"
+  },
+
+  "ppomppu": {
+    "description": "뽐뿌 - 쇼핑/커뮤니티",
+    "enabled": true,
+    "base_urls": [
+      "https://www.ppomppu.co.kr/zboard/zboard.php?id=freeboard",
+      "https://www.ppomppu.co.kr/zboard/zboard.php?id=computer"
+    ],
+    "max_posts_per_board": 15,
+    "crawl_frequency": "daily",
+    "note": "쇼핑 및 일상 정보 한글 텍스트"
+  },
+
+  "ruliweb": {
+    "description": "루리웹 - 게임/IT 커뮤니티",
+    "enabled": true,
+    "base_urls": [
+      "https://bbs.ruliweb.com/community/board/300143",
+      "https://bbs.ruliweb.com/community/board/300148"
+    ],
+    "max_posts_per_board": 15,
+    "crawl_frequency": "daily",
+    "note": "게임 및 IT 관련 한글 콘텐츠"
+  },
+
+  "theqoo": {
+    "description": "더쿠 - 종합 커뮤니티",
+    "enabled": true,
+    "base_urls": [
+      "https://theqoo.net/index.php?mid=hot",
+      "https://theqoo.net/index.php?mid=square"
+    ],
+    "max_posts_per_board": 15,
+    "crawl_frequency": "daily",
+    "note": "다양한 주제의 한글 커뮤니티 콘텐츠"
+  },
+
+  "instiz": {
+    "description": "인스티즈 - 연예/일반 커뮤니티",
+    "enabled": true,
+    "base_urls": [
+      "https://www.instiz.net/pt/",
+      "https://www.instiz.net/name_enter"
+    ],
+    "max_posts_per_board": 10,
+    "crawl_frequency": "daily",
+    "note": "연예 및 일상 한글 텍스트"
+  },
+
+  "wikidocs": {
+    "description": "위키독스 - 온라인 문서/책",
+    "enabled": true,
+    "base_urls": [
+      "https://wikidocs.net/book/1",
+      "https://wikidocs.net/book/2"
+    ],
+    "max_pages_per_book": 20,
+    "crawl_frequency": "daily",
+    "note": "기술 문서 및 튜토리얼 한글 텍스트"
+  },
+
+  "okky": {
+    "description": "OKKY - 개발자 커뮤니티",
+    "enabled": true,
+    "base_urls": [
+      "https://okky.kr/articles/questions",
+      "https://okky.kr/articles/gathering"
+    ],
+    "max_posts_per_board": 15,
+    "crawl_frequency": "daily",
+    "note": "개발자 Q&A 및 기술 토론"
+  },
+
+  "korean_wikipedia": {
+    "description": "한국어 위키백과 - 백과사전",
+    "enabled": true,
+    "base_urls": [
+      "https://ko.wikipedia.org/wiki/%EB%8C%80%ED%95%9C%EB%AF%BC%EA%B5%AD",
+      "https://ko.wikipedia.org/wiki/%EC%84%9C%EC%9A%B8%ED%8A%B9%EB%B3%84%EC%8B%9C",
+      "https://ko.wikipedia.org/wiki/%EA%B3%BC%ED%95%99",
+      "https://ko.wikipedia.org/wiki/%EA%B8%B0%EC%88%A0"
+    ],
+    "max_articles": 20,
+    "crawl_frequency": "daily",
+    "note": "표준 한국어 백과사전 텍스트"
+  },
+
+  "etoland": {
+    "description": "이토랜드 - 자동차 커뮤니티",
+    "enabled": true,
+    "base_urls": [
+      "https://www.etoland.co.kr/bbs/board.php?bo_table=etohumor",
+      "https://www.etoland.co.kr/bbs/board.php?bo_table=etoissue"
+    ],
+    "max_posts_per_board": 10,
+    "crawl_frequency": "daily",
+    "note": "자동차 및 일상 한글 커뮤니티"
+  },
+
+  "fmkorea": {
+    "description": "에펨코리아 - 종합 커뮤니티",
+    "enabled": true,
+    "base_urls": [
+      "https://www.fmkorea.com/index.php?mid=best",
+      "https://www.fmkorea.com/index.php?mid=humor"
+    ],
+    "max_posts_per_board": 15,
+    "crawl_frequency": "daily",
+    "note": "유머 및 이슈 한글 콘텐츠"
+  },
+
+  "ad_blocking": {
+    "enabled": true,
+    "description": "광고 및 불필요한 요소 제거 설정",
+    "css_selectors": [
+      "iframe[src*='ad']",
+      "div[class*='ad']",
+      "div[id*='ad']",
+      "div[class*='advertisement']",
+      "div[class*='banner']",
+      "div[class*='sponsor']",
+      "div[class*='promotion']",
+      "aside[class*='sidebar']",
+      "div[class*='popup']",
+      "div[class*='modal']",
+      ".adsbygoogle",
+      "#google_ads_iframe",
+      ".ad-container",
+      ".advertisement",
+      ".banner-ad",
+      ".sponsored-content",
+      "[data-ad-slot]",
+      "[data-google-query-id]"
+    ],
+    "xpath_selectors": [
+      "//iframe[contains(@src, 'ad')]",
+      "//div[contains(@class, 'ad')]",
+      "//div[contains(@id, 'ad')]",
+      "//div[contains(@class, 'advertisement')]",
+      "//div[contains(@class, 'banner')]",
+      "//aside[contains(@class, 'sidebar')]"
+    ],
+    "domains_to_block": [
+      "googleads.g.doubleclick.net",
+      "pagead2.googlesyndication.com",
+      "adservice.google.com",
+      "ad.doubleclick.net",
+      "ads.pubmatic.com",
+      "securepubads.g.doubleclick.net"
+    ]
+  },
+
+  "quality_settings": {
+    "min_text_length": 100,
+    "max_text_length": 5000,
+    "target_bbox_count": {
+      "min": 1,
+      "max": 300,
+      "optimal": 100
+    },
+    "include_low_bbox_sites": true,
+    "low_bbox_threshold": 10,
+    "exclude_keywords": [
+      "광고",
+      "AD",
+      "Sponsored",
+      "제휴마케팅",
+      "쿠팡파트너스"
+    ]
+  }
+}

@@ -1,0 +1,123 @@
+# Generated: 2025-10-02 17:38:00 KST
+# PaddleOCR Detection Training Configuration - MINIMAL AUGMENTATION
+# Purpose: Remove complex data augmentation to prevent memory overflow and RecursionError
+# Changes: Removed EastRandomCropData, MakeBorderMap, MakeShrinkMap
+
+Global:
+  debug: false
+  use_gpu: true
+  epoch_num: 100
+  log_smooth_window: 20
+  print_batch_step: 10
+  save_model_dir: /home/pro301/paddleocr_training/output/data_new_minimal/
+  save_epoch_step: 10
+  eval_batch_step: [0, 50]
+  cal_metric_during_train: true
+  pretrained_model: null
+  use_visualdl: false
+  distributed: false
+
+Architecture:
+  model_type: det
+  algorithm: DB
+  Transform:
+  Backbone:
+    name: MobileNetV3
+    scale: 0.5
+    model_name: large
+    disable_se: True
+  Neck:
+    name: RSEFPN
+    out_channels: 96
+    shortcut: True
+  Head:
+    name: DBHead
+    k: 50
+
+Loss:
+  name: DBLoss
+  balance_loss: true
+  main_loss_type: DiceLoss
+  alpha: 5
+  beta: 10
+  ohem_ratio: 3
+
+Optimizer:
+  name: Adam
+  beta1: 0.9
+  beta2: 0.999
+  lr:
+    name: Cosine
+    learning_rate: 0.0001
+    warmup_epoch: 2
+  regularizer:
+    name: L2
+    factor: 5.0e-05
+
+PostProcess:
+  name: DBPostProcess
+  thresh: 0.3
+  box_thresh: 0.6
+  max_candidates: 1000
+  unclip_ratio: 1.5
+
+Metric:
+  name: DetMetric
+  main_indicator: hmean
+
+Train:
+  dataset:
+    name: SimpleDataSet
+    data_dir: /home/pro301/paddleocr_training/data_new/
+    label_file_list:
+      - /home/pro301/git/en-zine/ocr_system/paddleocr_training/data/train_list.txt
+    ratio_list: [1.0]
+    transforms:
+      - DecodeImage:
+          img_mode: BGR
+          channel_first: false
+      - DetLabelEncode:
+      - DetResizeForTest:
+          limit_side_len: 960
+          limit_type: max
+      - NormalizeImage:
+          scale: 1./255.
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+          order: hwc
+      - ToCHWImage:
+      - KeepKeys:
+          keep_keys: [image, polys, ignore_tags]
+  loader:
+    shuffle: true
+    drop_last: false
+    batch_size_per_card: 1
+    num_workers: 0
+
+Eval:
+  dataset:
+    name: SimpleDataSet
+    data_dir: /home/pro301/paddleocr_training/data_new/
+    label_file_list:
+      - /home/pro301/git/en-zine/ocr_system/paddleocr_training/data/val_list.txt
+    transforms:
+      - DecodeImage:
+          img_mode: BGR
+          channel_first: false
+      - DetLabelEncode:
+      - DetResizeForTest:
+          limit_side_len: 960
+          limit_type: max
+      - NormalizeImage:
+          scale: 1./255.
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+          order: hwc
+      - ToCHWImage:
+      - KeepKeys:
+          keep_keys: [image, shape, polys, ignore_tags]
+  loader:
+    shuffle: false
+    drop_last: false
+    batch_size_per_card: 1
+    num_workers: 0

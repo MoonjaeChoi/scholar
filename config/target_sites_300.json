@@ -1,0 +1,40 @@
+{
+  "korean_news": [
+    "https://www.naver.com",
+    "https://news.naver.com",
+    "https://www.daum.net",
+    "https://news.daum.net",
+    "https://www.chosun.com",
+    "https://www.joongang.co.kr",
+    "https://www.donga.com",
+    "https://www.hani.co.kr",
+    "https://www.hankyung.com",
+    "https://www.mk.co.kr"
+  ],
+  "tech_sites": [
+    "https://www.techcrunch.com",
+    "https://www.theverge.com",
+    "https://arstechnica.com",
+    "https://www.wired.com",
+    "https://www.cnet.com"
+  ],
+  "documentation": [
+    "https://docs.python.org/3/",
+    "https://developer.mozilla.org",
+    "https://docs.github.com",
+    "https://kubernetes.io/docs/",
+    "https://docs.docker.com"
+  ],
+  "wikipedia": [
+    "https://en.wikipedia.org/wiki/Machine_learning",
+    "https://en.wikipedia.org/wiki/Artificial_intelligence",
+    "https://en.wikipedia.org/wiki/Computer_vision",
+    "https://en.wikipedia.org/wiki/Natural_language_processing",
+    "https://ko.wikipedia.org/wiki/머신러닝"
+  ],
+  "test_sites": [
+    "https://httpbin.org/html",
+    "https://example.com",
+    "https://www.iana.org/domains/reserved"
+  ]
+}

@@ -1,0 +1,47 @@
+# Generated: 2025-10-07 13:10:00 KST
+version: '3.8'
+
+services:
+  scholar:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: scholar-server
+    hostname: scholar
+    restart: unless-stopped
+
+    environment:
+      # Oracle Database
+      - ORACLE_HOST=${ORACLE_HOST:-zine-oracle-xe}
+      - ORACLE_PORT=${ORACLE_PORT:-1521}
+      - ORACLE_SERVICE=${ORACLE_SERVICE:-XEPDB1}
+      - ORACLE_USER=${ORACLE_USER:-ocr_admin}
+      - ORACLE_PASSWORD=${ORACLE_PASSWORD:-admin_password}
+
+      # Python settings
+      - PYTHONUNBUFFERED=1
+      - PYTHONPATH=/app
+
+      # Logging
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - LOG_PATH=/app/logs
+
+    volumes:
+      - ../data:/app/data
+      - ../logs:/app/logs
+      - ../../shared/models:/app/models:ro
+      - ../../shared/config:/app/shared_config:ro
+
+    networks:
+      - scholar-network
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  scholar-network:
+    name: scholar-network
+    driver: bridge

@@ -1,0 +1,17 @@
+/opt/ocr_system/paddleocr_training/
+├── PaddleOCR/                 # PaddleOCR 소스코드
+├── data/
+│   ├── train/                 # 학습 데이터
+│   │   ├── images/
+│   │   └── labels/
+│   ├── val/                   # 검증 데이터
+│   │   ├── images/
+│   │   └── labels/
+│   └── test/                  # 테스트 데이터
+├── configs/                   # 학습 설정 파일
+├── models/                    # 사전 학습된 모델
+│   ├── detection/
+│   └── recognition/
+├── logs/                      # 학습 로그
+├── output/                    # 학습 결과
+└── scripts/                   # 실행 스크립트

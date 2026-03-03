@@ -1,0 +1,237 @@
+# Generated: 2025-10-16 21:40:00 KST
+# Phase 2B: Continuous Image Crawler - Kubernetes Deployment
+#
+# 이 파일은 PaddleOCR 학습용 이미지 수집 시스템을 Kubernetes에 배포합니다.
+# 웹페이지를 A4 단위로 분할 캡처하여 WEB_CAPTURE_DATA 테이블에 저장합니다.
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: continuous-image-crawler
+  namespace: scholar
+  labels:
+    app: continuous-image-crawler
+    component: image-collector
+    phase: phase2b
+    version: v1.0.0
+spec:
+  replicas: 1  # 단일 인스턴스 (중복 크롤링 방지)
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: continuous-image-crawler
+  template:
+    metadata:
+      labels:
+        app: continuous-image-crawler
+        component: image-collector
+        phase: phase2b
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8005"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: image-crawler
+        image: scholar:latest
+        imagePullPolicy: IfNotPresent
+
+        command:
+          - python
+          - src/continuous_image_crawler.py
+
+        env:
+          # Oracle 연결 정보 (Secret에서)
+          - name: ORACLE_HOST
+            valueFrom:
+              secretKeyRef:
+                name: oracle-credentials
+                key: ORACLE_HOST
+          - name: ORACLE_PORT
+            valueFrom:
+              secretKeyRef:
+                name: oracle-credentials
+                key: ORACLE_PORT
+          - name: ORACLE_SERVICE_NAME
+            valueFrom:
+              secretKeyRef:
+                name: oracle-credentials
+                key: ORACLE_SERVICE_NAME
+          - name: ORACLE_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: oracle-credentials
+                key: ORACLE_USERNAME
+          - name: ORACLE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: oracle-credentials
+                key: ORACLE_PASSWORD
+
+          # 크롤링 설정 (ConfigMap에서)
+          - name: CRAWL_INTERVAL_SECONDS
+            valueFrom:
+              configMapKeyRef:
+                name: image-crawler-config
+                key: CRAWL_INTERVAL_SECONDS
+          - name: IMAGE_CRAWL_BATCH_SIZE
+            valueFrom:
+              configMapKeyRef:
+                name: image-crawler-config
+                key: IMAGE_CRAWL_BATCH_SIZE
+          - name: PROMETHEUS_METRICS_PORT
+            valueFrom:
+              configMapKeyRef:
+                name: image-crawler-config
+                key: PROMETHEUS_METRICS_PORT
+
+          # 로그 설정
+          - name: LOG_LEVEL
+            value: "INFO"
+          - name: LOG_DIR
+            value: "/opt/scholar/logs"
+
+        resources:
+          requests:
+            cpu: "1000m"      # 1 CPU
+            memory: "2Gi"     # 2GB RAM
+          limits:
+            cpu: "4000m"      # 4 CPU (Selenium 브라우저 사용)
+            memory: "8Gi"     # 8GB RAM
+
+        ports:
+          - name: metrics
+            containerPort: 8005
+            protocol: TCP
+
+        livenessProbe:
+          httpGet:
+            path: /metrics
+            port: 8005
+          initialDelaySeconds: 60
+          periodSeconds: 60
+          timeoutSeconds: 10
+          failureThreshold: 3
+
+        readinessProbe:
+          httpGet:
+            path: /metrics
+            port: 8005
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+
+        volumeMounts:
+          - name: images
+            mountPath: /home/pro301/git/en-zine/scholar/training/data/images
+          - name: logs
+            mountPath: /opt/scholar/logs
+
+      volumes:
+        - name: images
+          persistentVolumeClaim:
+            claimName: scholar-images-pvc
+        - name: logs
+          persistentVolumeClaim:
+            claimName: scholar-logs-pvc
+
+      restartPolicy: Always
+
+      # Chrome/Selenium 실행을 위한 보안 설정
+      securityContext:
+        fsGroup: 1000
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: continuous-image-crawler
+  namespace: scholar
+  labels:
+    app: continuous-image-crawler
+    component: image-collector
+spec:
+  type: ClusterIP
+  ports:
+    - name: metrics
+      port: 8005
+      targetPort: 8005
+      protocol: TCP
+  selector:
+    app: continuous-image-crawler
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: image-crawler-config
+  namespace: scholar
+  labels:
+    app: continuous-image-crawler
+data:
+  # 크롤링 간격 (초)
+  CRAWL_INTERVAL_SECONDS: "300"    # 5분
+
+  # 배치 크기 (한 번에 처리할 사이트 수)
+  IMAGE_CRAWL_BATCH_SIZE: "10"
+
+  # Prometheus 메트릭 포트
+  PROMETHEUS_METRICS_PORT: "8005"
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: scholar-images-pvc
+  namespace: scholar
+  labels:
+    app: continuous-image-crawler
+    component: storage
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+  storageClassName: standard  # 클러스터 환경에 맞게 수정
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: scholar-logs-pvc
+  namespace: scholar
+  labels:
+    app: continuous-image-crawler
+    component: logs
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: standard  # 클러스터 환경에 맞게 수정
+
+---
+# ServiceMonitor for Prometheus Operator (선택적)
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: continuous-image-crawler
+  namespace: scholar
+  labels:
+    app: continuous-image-crawler
+spec:
+  selector:
+    matchLabels:
+      app: continuous-image-crawler
+  endpoints:
+    - port: metrics
+      interval: 30s
+      path: /metrics

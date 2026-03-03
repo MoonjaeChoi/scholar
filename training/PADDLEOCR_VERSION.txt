@@ -1,0 +1,209 @@
+================================================================================
+PaddleOCR Version Information
+================================================================================
+
+Version: 2.7.0 (estimated - verify on server)
+Source Repository: https://github.com/PaddlePaddle/PaddleOCR.git
+Installation Date: 2025-10-01 (estimated)
+Last Verified: 2025-10-01
+
+================================================================================
+Installation Details
+================================================================================
+
+Installation Method:
+  - Cloned via setup_environment.sh
+  - Command: git clone https://github.com/PaddlePaddle/PaddleOCR.git
+
+Git Information (Before .git Removal):
+  - Branch: release/2.7 (estimated)
+  - Commit: [To be recorded from server]
+  - .git directory removed: 2025-10-01
+  - Reason: Simplified management, no impact on fine-tuning
+
+================================================================================
+Purpose & Usage
+================================================================================
+
+Primary Purpose:
+  1. Fine-tuning detection models (text detection in web pages)
+  2. Fine-tuning recognition models (text recognition)
+  3. Model optimization and export
+  4. Continuous learning system integration
+
+Used By:
+  - scripts/train_detection.py
+  - scripts/train_recognition.py
+  - scripts/continuous_learning.py
+  - scripts/ocr_service.py
+  - scripts/optimize_model.py
+
+Required Components:
+  - tools/train.py          (Training script)
+  - tools/eval.py           (Evaluation script)
+  - tools/export_model.py   (Model export)
+  - ppocr/                  (Core library)
+  - configs/                (Configuration templates)
+
+================================================================================
+Version Management
+================================================================================
+
+Current Status:
+  - .git directory: REMOVED (for simplified management)
+  - Source code: STATIC (version fixed)
+  - Management: Via en-zine Git repository
+
+Version Update Policy:
+  - Fixed version for stability
+  - Update only when necessary (bug fixes, new features)
+  - Manual replacement process required
+
+Update Procedure:
+  1. Backup current version:
+     mv PaddleOCR PaddleOCR_backup_$(date +%Y%m%d)
+
+  2. Download new version:
+     git clone https://github.com/PaddlePaddle/PaddleOCR.git
+     cd PaddleOCR
+     git checkout [desired_version]
+
+  3. Remove .git directory:
+     rm -rf .git
+
+  4. Update this file with new version information
+
+  5. Test training:
+     python scripts/test_paddleocr_environment.py
+     python scripts/train_detection.py
+
+  6. Commit to en-zine repository:
+     git add ocr_system/paddleocr_training/PaddleOCR
+     git commit -m "chore: Update PaddleOCR to [version]"
+
+================================================================================
+Dependencies
+================================================================================
+
+Python Requirements (from PaddleOCR/requirements.txt):
+  - paddlepaddle-gpu>=2.5.0
+  - opencv-python
+  - shapely
+  - scikit-image
+  - imgaug
+  - pyclipper
+  - lmdb
+  - tqdm
+  - numpy
+  - visualdl
+  - rapidfuzz
+  - opencv-contrib-python
+  - cython
+  - lxml
+  - premailer
+  - openpyxl
+  - attrdict
+  - Polygon3
+
+Additional Dependencies (from our requirements.txt):
+  - loguru
+  - cx-Oracle
+  - optuna (for hyperparameter optimization)
+
+================================================================================
+Configuration Files
+================================================================================
+
+Custom Configurations:
+  - ../configs/det/custom_web_detection.yml
+  - ../configs/rec/custom_web_recognition.yml
+
+Pre-trained Models:
+  - ../models/detection/en_PP-OCRv3_det_distill_train/
+  - ../models/recognition/en_PP-OCRv4_rec_train/
+
+Output Directories:
+  - ../output/det_custom_web/
+  - ../output/rec_custom_web/
+  - ../output/det_custom_web_inference/
+  - ../output/rec_custom_web_inference/
+
+================================================================================
+Verification Commands
+================================================================================
+
+Check Installation:
+  cd /home/pro301/git/en-zine/ocr_system/paddleocr_training
+  python scripts/test_paddleocr_environment.py
+
+Check Version (if git info available):
+  cd PaddleOCR
+  python -c "import ppocr; print(ppocr.__version__)"
+
+Check Files:
+  ls -la PaddleOCR/tools/
+  ls -la PaddleOCR/ppocr/
+
+Test Training:
+  python scripts/train_detection.py
+
+================================================================================
+Impact of .git Removal
+================================================================================
+
+✅ NO Impact:
+  - Fine-tuning training
+  - Model evaluation
+  - Model export
+  - Python imports
+  - Continuous learning
+  - OCR service
+
+⚠️ Limited Impact:
+  - Version tracking (solved by this file)
+  - Git-based updates (use manual replacement)
+  - Rollback (use backups)
+
+❌ Blocked:
+  - git pull (use manual download)
+  - git log (use this file)
+  - git checkout (use manual replacement)
+
+================================================================================
+Change History
+================================================================================
+
+2025-10-01:
+  - Initial installation via setup_environment.sh
+  - .git directory removed for simplified management
+  - Version information recorded in this file
+  - Integrated into en-zine Git repository
+
+Future Updates:
+  [Add version update history here]
+
+================================================================================
+Related Documentation
+================================================================================
+
+- docs/operation/017_PaddleOCR_저장소_관리_가이드.md
+- dir_tasks/201_PaddleOCR_Fine_tuning.md
+- dir_tasks/524_멀티모달_OCR_Confidence.md
+- ocr_system/paddleocr_training/README.md
+
+================================================================================
+Contact & Support
+================================================================================
+
+For PaddleOCR Issues:
+  - GitHub: https://github.com/PaddlePaddle/PaddleOCR/issues
+  - Documentation: https://github.com/PaddlePaddle/PaddleOCR/tree/release/2.7/doc
+
+For Project-Specific Issues:
+  - Check scripts/test_paddleocr_environment.py output
+  - Review logs in ../logs/
+  - Verify data in ../data/
+
+================================================================================
+End of Version Information
+================================================================================

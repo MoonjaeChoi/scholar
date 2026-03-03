@@ -1,0 +1,88 @@
+{
+  "description": "Continuous Training Configuration - 무한 학습 시스템 설정",
+  "generated": "2025-10-02 22:57:00 KST",
+
+  "database": {
+    "host": "oracle-xe",
+    "port": 1521,
+    "service_name": "XEPDB1",
+    "username": "ocr_admin",
+    "password": "admin_password"
+  },
+
+  "training": {
+    "training_script_path": "/home/pro301/git/en-zine/ocr_system/paddleocr_training/PaddleOCR/tools/train.py",
+    "training_config_path": "/home/pro301/git/en-zine/ocr_system/paddleocr_training/configs/det/data_200bbox_training.yml",
+    "epochs_per_iteration": 30,
+    "training_timeout_seconds": 7200,
+    "training_batch_size": 6,
+    "min_bbox_count": 1,
+    "iteration_interval_seconds": 10
+  },
+
+  "quality": {
+    "min_quality_score": 0.0,
+    "min_bbox_count_for_training": 1,
+    "quality_evaluation_batch_size": 100,
+    "max_training_failures": 3,
+    "data_retention_days": 365,
+    "include_low_bbox_data": true
+  },
+
+  "data_cleanup": {
+    "data_check_interval_seconds": 600,
+    "cleanup_enabled": true,
+    "delete_low_quality": false,
+    "delete_failed_training": true,
+    "delete_duplicates": false,
+    "delete_old_data": false
+  },
+
+  "goals": {
+    "target_precision": 0.95,
+    "target_recall": 0.92,
+    "target_hmean": 0.93,
+    "target_fps": 30.0,
+    "tolerance_precision": 0.01,
+    "tolerance_recall": 0.01,
+    "tolerance_hmean": 0.01,
+    "tolerance_fps": 2.0
+  },
+
+  "early_stopping": {
+    "enabled": true,
+    "patience": 10,
+    "min_improvement": 0.001
+  },
+
+  "limits": {
+    "max_epochs_per_iteration": 500,
+    "max_total_iterations": 100,
+    "max_total_hours": 168
+  },
+
+  "notifications": {
+    "email_enabled": false,
+    "slack_enabled": false,
+    "email": {
+      "smtp_server": "smtp.gmail.com",
+      "smtp_port": 587,
+      "use_tls": true,
+      "sender": "your-email@example.com",
+      "recipients": ["admin@example.com"],
+      "username": "",
+      "password": ""
+    },
+    "slack": {
+      "webhook_url": "",
+      "channel": "#training-alerts"
+    }
+  },
+
+  "logging": {
+    "log_level": "INFO",
+    "log_file": "/tmp/continuous_training.log",
+    "console_output": true,
+    "file_output": true
+  }
+}

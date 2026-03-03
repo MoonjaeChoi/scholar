@@ -1,0 +1,36 @@
+# 웹 크롤링 라이브러리
+selenium==4.15.2
+beautifulsoup4==4.12.2
+scrapy==2.11.0
+requests==2.31.0
+lxml==4.9.3
+
+# 이미지 처리
+Pillow==10.1.0
+opencv-python-headless==4.8.1.78
+imagehash==4.3.1
+
+# 데이터베이스 연동
+oracledb>=2.0
+
+# 데이터 처리
+pandas==2.1.4
+numpy==1.25.2
+
+# 유틸리티
+python-dotenv==1.0.0
+pydantic==2.5.0
+loguru==0.7.2
+
+# Claude API (Sonic Koi 방법론)
+anthropic>=0.40.0
+tenacity>=8.2.3
+
+# Monitoring
+prometheus-client==0.19.0
+
+# 병렬 처리
+asyncio-throttle==1.0.2
+
+# 웹드라이버 관리
+webdriver-manager==4.0.1

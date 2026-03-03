@@ -1,0 +1,240 @@
+#!/usr/bin/env python3
+# Generated: 2025-10-02 08:10:00 KST
+"""
+Create a safer dataset with stricter filtering to avoid training errors
+"""
+
+import os
+import sys
+import json
+import shutil
+from pathlib import Path
+import cv2
+import numpy as np
+
+sys.path.append('/home/pro301/git/en-zine/ocr_system/paddleocr_training')
+from database_connection import DatabaseConnection
+
+def log_info(msg):
+    print(f"[INFO] {msg}")
+
+def log_error(msg):
+    print(f"[ERROR] {msg}")
+
+def log_success(msg):
+    print(f"[SUCCESS] {msg}")
+
+def log_warning(msg):
+    print(f"[WARNING] {msg}")
+
+class SafeDatasetCreator:
+    def __init__(self, output_dir: str, min_bbox: int = 60, max_bbox: int = 250, max_samples: int = 100):
+        self.output_dir = Path(output_dir)
+        self.min_bbox = min_bbox
+        self.max_bbox = max_bbox
+        self.max_samples = max_samples
+        self.db_connection = DatabaseConnection()
+
+        # Create output structure
+        self.train_dir = self.output_dir / "train"
+        (self.train_dir / "images").mkdir(parents=True, exist_ok=True)
+        (self.train_dir / "labels").mkdir(parents=True, exist_ok=True)
+
+    def get_safe_captures(self):
+        """Get quality captures with strict filtering"""
+        try:
+            with self.db_connection.get_connection() as conn:
+                cursor = conn.cursor()
+
+                # Select captures with bbox count in safe range
+                query = """
+                SELECT
+                    wcd.CAPTURE_ID,
+                    wcd.IMAGE_PATH,
+                    COUNT(tbb.BOX_ID) as bbox_count,
+                    AVG(tbb.CONFIDENCE_SCORE) as avg_confidence,
+                    MIN(tbb.WIDTH * tbb.HEIGHT) as min_area,
+                    MAX(tbb.WIDTH * tbb.HEIGHT) as max_area
+                FROM WEB_CAPTURE_DATA wcd
+                INNER JOIN TEXT_BOUNDING_BOXES tbb ON wcd.CAPTURE_ID = tbb.CAPTURE_ID
+                WHERE wcd.PROCESSING_STATUS = 'completed'
+                    AND wcd.IMAGE_PATH IS NOT NULL
+                    AND tbb.WIDTH > 5
+                    AND tbb.HEIGHT > 5
+                    AND tbb.WIDTH < 2000
+                    AND tbb.HEIGHT < 2000
+                    AND LENGTH(tbb.TEXT_CONTENT) > 0
+                GROUP BY wcd.CAPTURE_ID, wcd.IMAGE_PATH
+                HAVING COUNT(tbb.BOX_ID) BETWEEN :min_bbox AND :max_bbox
+                    AND AVG(tbb.CONFIDENCE_SCORE) >= 0.7
+                    AND MIN(tbb.WIDTH * tbb.HEIGHT) >= 25
+                ORDER BY COUNT(tbb.BOX_ID), AVG(tbb.CONFIDENCE_SCORE) DESC
+                """
+
+                cursor.execute(query, {
+                    'min_bbox': self.min_bbox,
+                    'max_bbox': self.max_bbox
+                })
+
+                results = []
+                for row in cursor.fetchall():
+                    results.append({
+                        'capture_id': row[0],
+                        'image_path': row[1],
+                        'bbox_count': row[2],
+                        'avg_confidence': float(row[3]) if row[3] else 0.0,
+                        'min_area': float(row[4]) if row[4] else 0.0,
+                        'max_area': float(row[5]) if row[5] else 0.0
+                    })
+
+                return results[:self.max_samples]
+
+        except Exception as e:
+            log_error(f"Error getting safe captures: {e}")
+            import traceback
+            traceback.print_exc()
+            return []
+
+    def get_bounding_boxes(self, capture_id: int):
+        """Get bounding boxes for a capture with validation"""
+        try:
+            with self.db_connection.get_connection() as conn:
+                cursor = conn.cursor()
+
+                query = """
+                SELECT TEXT_CONTENT, X_COORDINATE, Y_COORDINATE, WIDTH, HEIGHT
+                FROM TEXT_BOUNDING_BOXES
+                WHERE CAPTURE_ID = :capture_id
+                    AND WIDTH > 5 AND HEIGHT > 5
+                    AND WIDTH < 2000 AND HEIGHT < 2000
+                    AND LENGTH(TEXT_CONTENT) > 0
+                ORDER BY Y_COORDINATE, X_COORDINATE
+                """
+
+                cursor.execute(query, {'capture_id': capture_id})
+
+                boxes = []
+                for row in cursor.fetchall():
+                    text_content = row[0]
+                    if hasattr(text_content, 'read'):
+                        text_content = text_content.read()
+                    text_content = str(text_content) if text_content else ""
+
+                    if not text_content:
+                        continue
+
+                    x = float(row[1]) if row[1] else 0.0
+                    y = float(row[2]) if row[2] else 0.0
+                    w = float(row[3]) if row[3] else 0.0
+                    h = float(row[4]) if row[4] else 0.0
+
+                    # Validate bbox
+                    if w <= 5 or h <= 5 or w >= 2000 or h >= 2000:
+                        continue
+                    if x < 0 or y < 0:
+                        continue
+
+                    boxes.append({
+                        'text': text_content,
+                        'x': x,
+                        'y': y,
+                        'width': w,
+                        'height': h
+                    })
+
+                return boxes
+
+        except Exception as e:
+            log_error(f"Error getting bounding boxes for {capture_id}: {e}")
+            return []
+
+    def create_dataset(self):
+        """Create safe dataset"""
+        log_info("Creating safe dataset...")
+        log_info(f"Filters: bbox_count {self.min_bbox}-{self.max_bbox}, max_samples {self.max_samples}")
+
+        captures = self.get_safe_captures()
+        log_info(f"Found {len(captures)} safe captures")
+
+        if not captures:
+            log_error("No safe captures found!")
+            return 0
+
+        successful = 0
+        train_list_path = self.output_dir / "train_list.txt"
+
+        with open(train_list_path, 'w', encoding='utf-8') as train_list:
+            for i, capture in enumerate(captures):
+                try:
+                    capture_id = capture['capture_id']
+                    image_path = capture['image_path']
+
+                    if not os.path.exists(image_path):
+                        log_warning(f"Image not found: {image_path}")
+                        continue
+
+                    # Get bounding boxes
+                    boxes = self.get_bounding_boxes(capture_id)
+                    if not boxes:
+                        log_warning(f"No valid boxes for capture {capture_id}")
+                        continue
+
+                    # Copy image
+                    image_filename = f"image_{capture_id}.jpg"
+                    dst_image_path = self.train_dir / "images" / image_filename
+                    shutil.copy2(image_path, dst_image_path)
+
+                    # Convert to PaddleOCR format
+                    label_dicts = []
+                    for box in boxes:
+                        x, y, w, h = box['x'], box['y'], box['width'], box['height']
+                        points = [
+                            [x, y],
+                            [x + w, y],
+                            [x + w, y + h],
+                            [x, y + h]
+                        ]
+                        label_dicts.append({
+                            "transcription": box['text'],
+                            "points": points
+                        })
+
+                    # Write to train_list.txt
+                    train_list.write(f"images/{image_filename}\t{json.dumps(label_dicts, ensure_ascii=False)}\n")
+
+                    successful += 1
+                    if (i + 1) % 10 == 0:
+                        log_info(f"Processed {i + 1}/{len(captures)}")
+
+                except Exception as e:
+                    log_error(f"Error processing capture {capture.get('capture_id', 'unknown')}: {e}")
+                    continue
+
+        log_success(f"✅ Successfully created {successful} samples")
+        log_info(f"Output directory: {self.output_dir}")
+        log_info(f"Train list: {train_list_path}")
+
+        return successful
+
+def main():
+    import argparse
+    parser = argparse.ArgumentParser(description='Create safe training dataset')
+    parser.add_argument('--output-dir', type=str, required=True, help='Output directory')
+    parser.add_argument('--min-bbox', type=int, default=60, help='Minimum bbox count')
+    parser.add_argument('--max-bbox', type=int, default=250, help='Maximum bbox count')
+    parser.add_argument('--max-samples', type=int, default=100, help='Maximum samples')
+
+    args = parser.parse_args()
+
+    creator = SafeDatasetCreator(
+        output_dir=args.output_dir,
+        min_bbox=args.min_bbox,
+        max_bbox=args.max_bbox,
+        max_samples=args.max_samples
+    )
+
+    count = creator.create_dataset()
+    sys.exit(0 if count > 0 else 1)
+
+if __name__ == "__main__":
+    main()
