@@ -93,10 +93,10 @@ kubectl logs -f -n en-zine -l app=scholar
 
 ```bash
 # Oracle Database (Production - Remote Server)
-# 서버: 58.227.121.8:1521
+# 서버: YOUR_SERVER_IP:1521
 # 접속 방법: docs/operation/008_외부접속정보.md 참조
 ORACLE_HOST=oracle-xe          # Docker 네트워크 내부: oracle-xe
-ORACLE_PORT=1521               # 외부 접속: 58.227.121.8:1521
+ORACLE_PORT=1521               # 외부 접속: YOUR_SERVER_IP:1521
 ORACLE_SERVICE=XEPDB1
 ORACLE_USER=ocr_admin
 ORACLE_PASSWORD=admin_password
@@ -180,7 +180,7 @@ docker ps | grep oracle
 
 # 원격 서버 Oracle 접속
 # 참조: docs/operation/008_외부접속정보.md
-ssh -p 29022 pro301@58.227.121.8
+ssh -p 29022 pro301@YOUR_SERVER_IP
 docker exec -it oracle-xe sqlplus ocr_admin/admin_password@XEPDB1
 ```
 
